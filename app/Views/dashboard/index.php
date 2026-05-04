@@ -135,17 +135,29 @@
                     result.style.color = '';
 
                     try {
+                        // `redirect: 'manual'` stops the browser from silently
+                        // following a 302 — important because some CI4 configs
+                        // make CSRF failures redirect instead of returning 403.
                         const response = await fetch(<?= json_encode(site_url('/notes')) ?>, {
-                            method:  'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body:    'body=this+should+be+rejected',
+                            method:   'POST',
+                            redirect: 'manual',
+                            headers:  { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body:     'body=this+should+be+rejected',
                         });
 
-                        if (response.status === 403) {
-                            result.textContent = 'Blocked (HTTP 403) — CSRF filter is working.';
+                        const wasBlocked =
+                            response.status === 403 ||
+                            response.type   === 'opaqueredirect';
+
+                        if (wasBlocked) {
+                            const how = response.status === 403
+                                ? 'HTTP 403'
+                                : 'redirect (security.redirect=true)';
+                            result.textContent = 'Blocked via ' + how + ' — CSRF filter is working.';
                             result.style.color = '#027a48';
                         } else {
-                            result.textContent = 'Unexpected status: HTTP ' + response.status;
+                            result.textContent = 'Unexpected status: HTTP ' + response.status +
+                                ' — CSRF filter did NOT block this request.';
                             result.style.color = '#b42318';
                         }
                     } catch (err) {
