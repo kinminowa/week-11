@@ -1,73 +1,82 @@
-<<<<<<< HEAD
-# CodeIgniter 4 Application Starter
+# week_11
 
-## What is CodeIgniter?
+A CodeIgniter 4 application built around three principles: clear routes,
+CSRF-protected forms, and escaped output. The UI is a minimal black/white
+dashboard with a single accent blue.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Features
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
-
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
-
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
-
-## Installation & updates
-
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
-
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+- Public landing page
+- User registration and login (passwords hashed with `password_hash`)
+- Protected dashboard guarded by a custom `AuthFilter`
+- Notes form with persistent MySQL storage — used to demonstrate CSRF and XSS protection
 
 ## Setup
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+1. Clone the repository.
+2. Run `composer install` to fetch the framework.
+3. Copy `env` to `.env` and update the database credentials if your XAMPP MySQL is not the default `root` / empty password.
+4. In phpMyAdmin (or via SQL) create a database named `week_11`.
+5. Run `php spark migrate` to create the `users` and `notes` tables.
+6. Visit the site through XAMPP at <http://localhost/week%2011/public/>.
 
-## Important Change with index.php
+## Routes
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+| Method | URI                       | Handler                  | Notes                  |
+| ------ | ------------------------- | ------------------------ | ---------------------- |
+| GET    | `/`                       | `Home::index`            | Public landing         |
+| GET    | `/login`                  | `Auth::login`            | Login form             |
+| POST   | `/login`                  | `Auth::attemptLogin`     | CSRF-protected         |
+| GET    | `/register`               | `Auth::register`         | Register form          |
+| POST   | `/register`               | `Auth::attemptRegister`  | CSRF-protected         |
+| POST   | `/logout`                 | `Auth::logout`           | CSRF-protected         |
+| GET    | `/dashboard`              | `Dashboard::index`       | `auth` filter          |
+| POST   | `/notes`                  | `Dashboard::storeNote`   | `auth` + CSRF          |
+| POST   | `/notes/{id}/delete`      | `Dashboard::deleteNote`  | `auth` + CSRF          |
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+## Security demonstrations
 
-**Please** read the user guide for a better explanation of how CI4 works!
+### CSRF Test
 
-## Repository Management
+Form submission fails with **HTTP 403** if `csrf_field()` is missing from the form.
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+The dashboard includes a "POST without CSRF token" button that uses `fetch()` to send a raw POST to `/notes` without the hidden token. The global `csrf` filter (registered in `app/Config/Filters.php`) rejects the request before it ever reaches the controller, and the JavaScript prints **"Blocked (HTTP 403) — CSRF filter is working."** in the result box.
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+### XSS Test
 
-## Server Requirements
+Typing `<b>John</b>` (or `<script>alert(1)</script>`) into the notes form displays the literal string `<b>John</b>` on the dashboard — not bold text, and no JavaScript executes.
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+### Why it works
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+`esc()` converts `<` to `&lt;` and `>` to `&gt;` so the browser treats them as text, not HTML tags. Every place a user-supplied value is echoed in a view (note bodies, username, email, flash messages), the output is wrapped in `esc(...)`, so the browser never receives executable HTML or JavaScript that came from user input.
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+## Project layout
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+```
+app/
+├── Config/
+│   ├── Filters.php          ← CSRF added to globals.before
+│   └── Routes.php           ← all routes mapped
+├── Controllers/
+│   ├── Home.php             ← landing
+│   ├── Auth.php             ← register / login / logout
+│   └── Dashboard.php        ← index / storeNote / deleteNote
+├── Filters/
+│   └── AuthFilter.php       ← redirects unauthenticated visitors
+├── Models/
+│   ├── UserModel.php        ← hashes passwords on insert/update
+│   └── NoteModel.php        ← user-scoped queries
+├── Database/Migrations/
+│   ├── 2026-05-04-000001_CreateUsersTable.php
+│   └── 2026-05-04-000002_CreateNotesTable.php
+└── Views/
+    ├── home.php
+    ├── templates/main.php   ← shared layout (the minimalytic CSS)
+    ├── auth/login.php
+    ├── auth/register.php
+    └── dashboard/index.php
+```
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
-=======
-# week-11
->>>>>>> 04e0d9891242d06edd5ea7f8acff332b39faf2c5
+## Server requirements
+
+PHP 8.2 or higher with the `intl`, `mbstring`, and `mysqlnd` extensions enabled.

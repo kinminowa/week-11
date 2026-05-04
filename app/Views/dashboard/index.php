@@ -53,6 +53,39 @@
         </div>
     </div>
 
+    <?php /* ---- Security tests reference ----------------------------------------- */ ?>
+    <div class="panel">
+        <h2>Security tests</h2>
+        <p class="muted">
+            Use the form and button below to verify the two protections are working.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:14px; margin-top:14px;">
+            <div style="border-left:3px solid var(--accent); padding:6px 0 6px 14px;">
+                <strong>CSRF Test:</strong>
+                <span class="muted">
+                    Form submission fails with <code>403</code> if
+                    <code>csrf_field()</code> is missing from the form.
+                </span>
+            </div>
+            <div style="border-left:3px solid var(--accent); padding:6px 0 6px 14px;">
+                <strong>XSS Test:</strong>
+                <span class="muted">
+                    Typing <code>&lt;b&gt;John&lt;/b&gt;</code> displays the literal
+                    string <code>&lt;b&gt;John&lt;/b&gt;</code> — not bold text.
+                </span>
+            </div>
+            <div style="border-left:3px solid var(--accent); padding:6px 0 6px 14px;">
+                <strong>Why it works:</strong>
+                <span class="muted">
+                    <code>esc()</code> converts <code>&lt;</code> to <code>&amp;lt;</code>
+                    and <code>&gt;</code> to <code>&amp;gt;</code> so the browser treats
+                    them as text, not HTML tags.
+                </span>
+            </div>
+        </div>
+    </div>
+
     <?php /* ---- Notes form (CSRF demonstration) --------------------------------- */ ?>
     <div class="panel">
         <h2>Add a note</h2>
