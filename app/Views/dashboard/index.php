@@ -135,19 +135,19 @@
                     result.style.color = '';
 
                     try {
-                        // `redirect: 'manual'` stops the browser from silently
-                        // following a 302 — important because some CI4 configs
-                        // make CSRF failures redirect instead of returning 403.
                         const response = await fetch(<?= json_encode(site_url('/notes')) ?>, {
-                            method:   'POST',
-                            redirect: 'manual',
-                            headers:  { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body:     'body=this+should+be+rejected',
+                            method:  'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body:    'body=this+should+be+rejected',
                         });
 
+                        // The CSRF filter is working if EITHER:
+                        //   - the request was rejected with HTTP 403, or
+                        //   - the response was a redirect away from /notes
+                        //     (which happens when security.redirect = true).
                         const wasBlocked =
                             response.status === 403 ||
-                            response.type   === 'opaqueredirect';
+                            response.redirected;
 
                         if (wasBlocked) {
                             const how = response.status === 403
